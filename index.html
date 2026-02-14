@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DJ Smoov | Wedding DJ</title>
+  <meta name="description" content="DJ Smoov — Wedding DJ. Ceremony + Reception or Reception Only. Request availability and get a text back." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="container">
+    <h1 class="title">DJ Smoov</h1>
+    <p class="sub">Wedding DJ • Clean transitions • Packed dance floors</p>
+  </header>
+
+  <main class="container grid">
+    <section class="card">
+      <h2>Packages</h2>
+
+      <div class="package">
+        <div class="package-text">
+          <strong>Ceremony + Reception</strong>
+          <div class="muted">Ceremony audio + full reception DJ service</div>
+        </div>
+        <div class="price">$700</div>
+      </div>
+
+      <div class="package">
+        <div class="package-text">
+          <strong>Reception Only</strong>
+          <div class="muted">Reception DJ service only</div>
+        </div>
+        <div class="price">$400</div>
+      </div>
+
+      <hr class="sep" />
+
+      <p class="muted tiny">
+        Submit an inquiry to check availability. This isn’t a confirmed booking.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Check availability</h2>
+      <p class="muted">Fill this out and DJ Smoov will text you back.</p>
+
+      <!-- Netlify Function endpoint -->
+      <form id="bookingForm" method="POST" action="/.netlify/functions/send-sms">
+        <div class="two">
+          <label>
+            Your Name
+            <input name="name" type="text" placeholder="Jane Smith" required />
+          </label>
+
+          <label>
+            Your Phone (so DJ Smoov can text you back)
+            <input name="client_phone" type="tel" placeholder="+1 555 555 5555" required />
+          </label>
+        </div>
+
+        <div class="two">
+          <label>
+            Email (optional)
+            <input name="email" type="email" placeholder="jane@email.com" />
+          </label>
+
+          <label>
+            Wedding Date
+            <input name="date" type="date" required />
+          </label>
+        </div>
+
+        <label>
+          Location (venue + city/state)
+          <input name="location" type="text" placeholder="Venue Name, Provo UT" required />
+        </label>
+
+        <div class="two">
+          <label>
+            Start Time
+            <input name="start_time" type="time" required />
+          </label>
+
+          <label>
+            End Time
+            <input name="end_time" type="time" required />
+          </label>
+        </div>
+
+        <label>
+          Package
+          <select name="package" id="packageSelect" required>
+            <option value="" disabled selected>Select one</option>
+            <option value="Ceremony + Reception - $700">Ceremony + Reception ($700)</option>
+            <option value="Reception Only - $400">Reception Only ($400)</option>
+          </select>
+        </label>
+
+        <div class="total">
+          <span class="muted">Estimated price:</span>
+          <strong id="priceLabel">$—</strong>
+        </div>
+
+        <label>
+          Notes (vibe, special requests, etc.)
+          <textarea name="notes" rows="4" placeholder="Anything DJ Smoov should know?"></textarea>
+        </label>
+
+        <button type="submit">Send Inquiry</button>
+
+        <p class="muted tiny">
+          If you don’t get a reply, double-check your phone number.
+        </p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="container footer">
+    <small class="muted">© <span id="year"></span> DJ Smoov</small>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
