@@ -1,21 +1,6 @@
 const twilio = require("twilio");
 
-exports.handler = async (event) => {
-  return {
-    statusCode: 200,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      envKeysWithTwilio: Object.keys(process.env).filter(k => k.toUpperCase().includes("TWILIO")).sort(),
-      has: {
-        TWILIO_ACCOUNT_SID: !!process.env.TWILIO_ACCOUNT_SID,
-        TWILIO_AUTH_TOKEN: !!process.env.TWILIO_AUTH_TOKEN,
-        TWILIO_PHONE_NUMBER: !!process.env.TWILIO_PHONE_NUMBER,
-      }
-    }),
-  };
 
-  // (everything below here won't run while debugging)
-};
 exports.handler = async (event) => {
   try {
     // --- Parse body safely ---
@@ -60,7 +45,14 @@ exports.handler = async (event) => {
     const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
     // Example: pull values from your form/body
-    const to = data.to; // must be like +1XXXXXXXXXX
+    const to = process.env.TWILIO_TO_NUMBER;
+    if (!to) {
+  return {
+    statusCode: 500,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ok: false, error: "Missing TWILIO_TO_NUMBER" }),
+  };
+}
     const message = data.message || "New inquiry received.";
 
     const result = await client.messages.create({
