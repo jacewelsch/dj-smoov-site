@@ -1,3 +1,27 @@
+exports.handler = async (event) => {
+  console.log("send-sms invoked"); // <- should always appear
+
+  try {
+    console.log("method:", event.httpMethod);
+    console.log("raw body:", event.body);
+
+    // --- your existing code below here ---
+    // parse body, call Twilio, etc.
+
+  } catch (err) {
+    console.error("send-sms error:", err);
+
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ok: false,
+        message: err?.message || String(err),
+        name: err?.name,
+      }),
+    };
+  }
+};
 const twilio = require("twilio");
 
 exports.handler = async (event) => {
