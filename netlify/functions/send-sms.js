@@ -1,73 +1,74 @@
+const twilio = require("twilio");
+
 exports.handler = async (event) => {
-  console.log("send-sms invoked"); // <- should always appear
-
   try {
-    console.log("method:", event.httpMethod);
-    console.log("raw body:", event.body);
+    // --- Parse body safely ---
+    let data = {};
+    try {
+      data = event.body ? JSON.parse(event.body) : {};
+    } catch (e) {
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ok: false,
+          error: "Invalid JSON body",
+          bodySample: (event.body || "").slice(0, 200),
+        }),
+      };
+    }
 
-    // --- your existing code below here ---
-    // parse body, call Twilio, etc.
+    // --- Env var checks (this catches the #1 issue immediately) ---
+    const {
+      TWILIO_ACCOUNT_SID,
+      TWILIO_AUTH_TOKEN,
+      TWILIO_PHONE_NUMBER,
+    } = process.env;
 
+    if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+      return {
+        statusCode: 500,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ok: false,
+          error: "Missing Twilio env vars on Netlify",
+          missing: {
+            TWILIO_ACCOUNT_SID: !TWILIO_ACCOUNT_SID,
+            TWILIO_AUTH_TOKEN: !TWILIO_AUTH_TOKEN,
+            TWILIO_PHONE_NUMBER: !TWILIO_PHONE_NUMBER,
+          },
+        }),
+      };
+    }
+
+    const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+
+    // Example: pull values from your form/body
+    const to = data.to; // must be like +1XXXXXXXXXX
+    const message = data.message || "New inquiry received.";
+
+    const result = await client.messages.create({
+      from: TWILIO_PHONE_NUMBER,
+      to,
+      body: message,
+    });
+
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ok: true, sid: result.sid }),
+    };
   } catch (err) {
-    console.error("send-sms error:", err);
-
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ok: false,
-        message: err?.message || String(err),
+        error: err?.message || String(err),
         name: err?.name,
+        code: err?.code,
+        moreInfo: err?.moreInfo,
       }),
     };
-  }
-};
-const twilio = require("twilio");
-
-exports.handler = async (event) => {
-  try {
-    const data = JSON.parse(event.body || "{}");
-
-    const {
-      name,
-      email,
-      client_phone,
-      date,
-      location,
-      start_time,
-      end_time,
-      package: pkg,
-      notes
-    } = data;
-
-    if (!name || !client_phone || !date || !location || !start_time || !end_time || !pkg) {
-      return { statusCode: 400, body: "Missing required fields." };
-    }
-
-    const price = pkg.includes("700") ? "700" : pkg.includes("400") ? "400" : "—";
-
-    const body =
-`New DJ Smoov inquiry:
-Name: ${name}
-Phone: ${client_phone}
-Email: ${email || "—"}
-Date: ${date}
-Location: ${location}
-Time: ${start_time}–${end_time}
-Package: ${pkg}
-Price: $${price}
-Notes: ${notes || "—"}`;
-
-    const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-
-    await client.messages.create({
-      body,
-      from: process.env.TWILIO_FROM,
-      to: process.env.DJ_PHONE
-    });
-
-    return { statusCode: 200, body: JSON.stringify({ ok: true }) };
-  } catch (err) {
-    return { statusCode: 500, body: "Server error sending SMS." };
   }
 };
